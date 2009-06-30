@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+require File.dirname(__FILE__) + '/../lib/greed'
+
+ui = Greed::UI
+ui.out_stream = STDOUT
+ui.in_stream = STDIN
+
+ui.puts "Welcome to Greed!"
+
+selected_players = []
+selecting_players = true
+player_count = 1
+
+while selecting_players
+  player = ui.choose("Select Player #{player_count}", [:human, :robot, :done])
+  
+  if player == :done
+    selecting_players = false
+  else
+    selected_players << player
+    player_count += 1
+  end
+end
+
+players = []
+selected_players.each do |p|
+  case p
+  when :human
+    players << Greed::Player::Human.new
+  when :robot
+    players << Greed::Player::Robot.new
+  end
+end
+
+game = Greed::Game.new(players)
+
+while !game.in_final_round?
+  player_name = game.current_player_position
+  ui.puts "#{player_name}'s turn"
+  ui.puts "Round: #{game.stats[:round]}"
+  ui.puts "Scores: #{game.stats[:scores].join(",")}"
+  result = game.play_turn
+  ui.puts "#{player_name} scored: #{result}"
+end
+
+ui.puts "FINAL ROUND!"
+game.play_turn
+
+ui.puts "Final Scores: #{game.stats[:scores].join(",")}"
