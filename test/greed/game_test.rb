@@ -35,7 +35,7 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_play_turn_rolls_once_then_stops
-    player_rolls(@player_1, [1,1,1,2,3])
+    player_rolls_once(@player_1, [1,1,1,2,3])
     turn_score_result = @game.play_turn
     
     assert_equal 1000, turn_score_result
@@ -43,7 +43,7 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_play_turn_rolls_twice_then_stops
-    player_rolls_sequence @player_1, [[1,1,1,2,3],[2,5]]
+    player_rolls_turn_sequence @player_1, [[1,1,1,2,3],[2,5]]
     turn_score_result = @game.play_turn
     
     assert_equal 1050, turn_score_result
@@ -52,23 +52,23 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_turn_score_does_not_count_if_not_in_game
-    player_rolls_sequence @player_1, [[1,5,2,3,4], [5,2,3]]
+    player_rolls_turn_sequence @player_1, [[1,5,2,3,4], [5,2,3]]
     @game.play_turn
     
     assert_equal 0, @game.stats[:scores][0]
   end
   
   def test_turn_score_does_not_count_if_player_rolls_a_zero
-    player_rolls_sequence @player_1, [[1,1,1,1,2],[2]]
+    player_rolls_turn_sequence @player_1, [[1,1,1,1,2],[2]]
     @game.play_turn
     
     assert_equal 0, @game.stats[:scores][0]
   end
   
   def test_play_round
-    player_rolls(@player_1, [1,1,1,2,3])
-    player_rolls(@player_2, [2,2,1,2,3])
-    player_rolls_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
+    player_rolls_once(@player_1, [1,1,1,2,3])
+    player_rolls_once(@player_2, [2,2,1,2,3])
+    player_rolls_turn_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
     
     @game.play_round
     
@@ -77,18 +77,18 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_play_two_rounds
-    player_rolls(@player_1, [1,1,1,2,3])
-    player_rolls(@player_2, [2,2,1,2,3])
-    player_rolls_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
+    player_rolls_once(@player_1, [1,1,1,2,3])
+    player_rolls_once(@player_2, [2,2,1,2,3])
+    player_rolls_turn_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
     
     @game.play_round
     
     assert_equal [1000, 300, 0], @game.stats[:scores]
     assert_equal 2, @game.stats[:round]
     
-    player_rolls_sequence @player_1, [[2,3,4,2,5],[2,3,4,2]]
-    player_rolls_sequence @player_2, [[1,1,2,3,4],[1,1,1]]
-    player_rolls_sequence @player_3, [[1,2,3,4,4],[1,2,3,4],[1,2,3]]
+    player_rolls_turn_sequence @player_1, [[2,3,4,2,5],[2,3,4,2]]
+    player_rolls_turn_sequence @player_2, [[1,1,2,3,4],[1,1,1]]
+    player_rolls_turn_sequence @player_3, [[1,2,3,4,4],[1,2,3,4],[1,2,3]]
     
     @game.play_round
     
@@ -170,12 +170,12 @@ class TestGame < Test::Unit::TestCase
     assert_equal 1, Game.non_scoring_dice_count([1,2])
   end
   
-  def player_rolls player, roll_result
+  def player_rolls_once player, roll_result
     player.expects(:roll).with(any_parameters).returns(roll_result)
     player.expects(:keep_rolling?).with(any_parameters).returns(false)
   end
   
-  def player_rolls_sequence player, roll_results
+  def player_rolls_turn_sequence player, roll_results
     roll_sequence = sequence("roll sequence")
     
     # first roll
