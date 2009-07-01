@@ -22,12 +22,12 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_initial_stats
-    expected = { :round => 1, :scores => [0,0,0] }
+    expected = { :scores => [0,0,0], :in_the_game => [false,false,false] }
     assert_equal expected, @game.stats
   end
   
   def test_current_player_position
-    assert_equal "Player 1", @game.current_player_position
+    assert_equal @player_1, @game.current_player
   end
   
   def test_game_is_not_in_final_round
@@ -48,14 +48,38 @@ class TestGame < Test::Unit::TestCase
     
     assert_equal 1050, turn_score_result
     assert_equal 1050, @game.stats[:scores][0]
-    assert_equal 1, @game.stats[:round]
   end
   
   def test_turn_score_does_not_count_if_not_in_game
-    player_rolls_turn_sequence @player_1, [[1,5,2,3,4], [5,2,3]]
+    player_rolls_once(@player_1, [1,2,3,4,5])
+    @game.play_turn
+    
+    player_rolls_once(@player_2, [1,1,1,2,3])
+    @game.play_turn
+    
+    player_rolls_once(@player_3, [1,1,1,2,3])
+    @game.play_turn
+    
+    player_rolls_once(@player_1, [1,5,4,2,3])
     @game.play_turn
     
     assert_equal 0, @game.stats[:scores][0]
+  end
+  
+  def test_turn_score_counts_if_in_game
+    player_rolls_once(@player_1, [3,3,3,4,2])
+    @game.play_turn
+    
+    player_rolls_once(@player_2, [1,1,1,2,3])
+    @game.play_turn
+    
+    player_rolls_once(@player_3, [1,1,1,2,3])
+    @game.play_turn
+    
+    player_rolls_once(@player_1, [1,5,4,2,3])
+    @game.play_turn
+    
+    assert_equal 450, @game.stats[:scores][0]
   end
   
   def test_turn_score_does_not_count_if_player_rolls_a_zero
@@ -63,37 +87,6 @@ class TestGame < Test::Unit::TestCase
     @game.play_turn
     
     assert_equal 0, @game.stats[:scores][0]
-  end
-  
-  def test_play_round
-    player_rolls_once(@player_1, [1,1,1,2,3])
-    player_rolls_once(@player_2, [2,2,1,2,3])
-    player_rolls_turn_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
-    
-    @game.play_round
-    
-    assert_equal [1000, 300, 0], @game.stats[:scores]
-    assert_equal 2, @game.stats[:round]
-  end
-  
-  def test_play_two_rounds
-    player_rolls_once(@player_1, [1,1,1,2,3])
-    player_rolls_once(@player_2, [2,2,1,2,3])
-    player_rolls_turn_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
-    
-    @game.play_round
-    
-    assert_equal [1000, 300, 0], @game.stats[:scores]
-    assert_equal 2, @game.stats[:round]
-    
-    player_rolls_turn_sequence @player_1, [[2,3,4,2,5],[2,3,4,2]]
-    player_rolls_turn_sequence @player_2, [[1,1,2,3,4],[1,1,1]]
-    player_rolls_turn_sequence @player_3, [[1,2,3,4,4],[1,2,3,4],[1,2,3]]
-    
-    @game.play_round
-    
-    assert_equal [1000, 1500, 300], @game.stats[:scores]
-    assert_equal 3, @game.stats[:round]
   end
   
   def test_score_of_an_empty_list_is_zero
