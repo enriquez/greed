@@ -35,7 +35,7 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_play_turn_rolls_once_then_stops
-    player_rolls(@player_1, [1,1,1,2,3], false)
+    player_rolls(@player_1, [1,1,1,2,3])
     turn_score_result = @game.play_turn
     
     assert_equal 1000, turn_score_result
@@ -66,8 +66,8 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_play_round
-    player_rolls(@player_1, [1,1,1,2,3], false)
-    player_rolls(@player_2, [2,2,1,2,3], false)
+    player_rolls(@player_1, [1,1,1,2,3])
+    player_rolls(@player_2, [2,2,1,2,3])
     player_rolls_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
     
     @game.play_round
@@ -77,8 +77,8 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_play_two_rounds
-    player_rolls(@player_1, [1,1,1,2,3], false)
-    player_rolls(@player_2, [2,2,1,2,3], false)
+    player_rolls(@player_1, [1,1,1,2,3])
+    player_rolls(@player_2, [2,2,1,2,3])
     player_rolls_sequence @player_3, [[1,2,3,4,5],[2,3,4]]
     
     @game.play_round
@@ -170,22 +170,33 @@ class TestGame < Test::Unit::TestCase
     assert_equal 1, Game.non_scoring_dice_count([1,2])
   end
   
-  def player_rolls player, roll_result, keep_rolling
+  def player_rolls player, roll_result
     player.expects(:roll).with(any_parameters).returns(roll_result)
-    player.expects(:keep_rolling?).with(any_parameters).returns(keep_rolling)
+    player.expects(:keep_rolling?).with(any_parameters).returns(false)
   end
   
   def player_rolls_sequence player, roll_results
-    last_roll_result_index = roll_results.length - 1
     roll_sequence = sequence("roll sequence")
     
-    roll_results.each_with_index do |roll_result, i|
-      keep_rolling = last_roll_result_index != i
+    # first roll
+    player.expects(:roll).
+      with(any_parameters).
+      returns(roll_results.slice!(0)).
+      in_sequence(roll_sequence)
+    player.expects(:keep_rolling?).
+      with(any_parameters).
+      returns(true).
+      in_sequence(roll_sequence)
+          
+    last_roll_result = roll_results.last
+      
+    # iterate through each subsequent roll
+    roll_results.each do |roll_result|
+      keep_rolling = last_roll_result != roll_result
       
       player.expects(:roll).
         with(any_parameters).
         returns(roll_result).
-        at_least_once.
         in_sequence(roll_sequence)
       player.expects(:keep_rolling?).
         with(any_parameters).

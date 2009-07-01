@@ -27,22 +27,23 @@ module Greed
       turn_scores = Array.new
       dice_count = 5
       
-      score_and_dice_count = current_player_roll(dice_count)
-      turn_scores << score_and_dice_count[:score]
-      dice_count = score_and_dice_count[:dice_count]
-      
-      while @current_player.keep_rolling?(stats, turn_scores) and !turn_scores.include?(0) and dice_count > 0
+      turn_continues = true
+      while turn_continues
         score_and_dice_count = current_player_roll(dice_count)
+        
         turn_scores << score_and_dice_count[:score]
         dice_count = score_and_dice_count[:dice_count]
         
         if turn_scores.include?(0)
-          UI.puts "BAD CHOICE! YOU ROLLED A ZERO"
-          break
+          turn_continues = false
+        elsif dice_count <= 0
+          turn_continues = false
         end
-        if dice_count <= 0
-          UI.puts "NO MORE DICE!"
+        
+        if turn_continues
+          turn_continues = @current_player.keep_rolling?(stats, turn_scores)
         end
+          
       end
       
       turn_score_contribution = turn_scores.inject(0) { |sum, i| sum += i }
