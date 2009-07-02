@@ -15,7 +15,7 @@ module Greed
         dice_set.roll(die_count)
       end
       
-      def keep_rolling?(stats, turn_scores)
+      def keep_rolling?(stats, turn_scores, dice_remaining)
         # implemented by subclass
       end
     end

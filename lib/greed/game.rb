@@ -50,7 +50,7 @@ module Greed
         end
         
         if turn_continues
-          turn_continues = @current_player.keep_rolling?(stats, turn_scores)
+          turn_continues = @current_player.keep_rolling?(stats, turn_scores, dice_count)
           unless turn_continues
             @spectator.player_stops_rolling(@current_player)
           end

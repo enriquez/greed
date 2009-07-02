@@ -10,7 +10,7 @@ module ConsoleGame
         "Human"
       end
       
-      def keep_rolling?(stats, turn_scores)
+      def keep_rolling?(stats, turn_scores, dice_remaining)
         @ui.ask("Player #{@position + 1}: Keep Rolling?")
       end
     end

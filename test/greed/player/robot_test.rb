@@ -9,8 +9,12 @@ class TestRobot < Test::Unit::TestCase
     assert_equal "Robot", @robot.name
   end
   
-  def test_never_keeps_rolling
-    assert !@robot.keep_rolling?(stats, turn_scores)
+  def test_rolls_if_there_are_at_least_3_die_available
+    assert @robot.keep_rolling?(stats, turn_scores, 5)
+    assert @robot.keep_rolling?(stats, turn_scores, 4)
+    assert @robot.keep_rolling?(stats, turn_scores, 3)
+    assert !@robot.keep_rolling?(stats, turn_scores, 2)
+    assert !@robot.keep_rolling?(stats, turn_scores, 1)
   end
   
   def stats
@@ -22,5 +26,9 @@ class TestRobot < Test::Unit::TestCase
   
   def turn_scores
     [100]
+  end
+  
+  def dice_remaining
+    5
   end
 end
