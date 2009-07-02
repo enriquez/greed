@@ -11,7 +11,7 @@ module ConsoleGame
       end
       
       def keep_rolling?(stats, turn_scores)
-        @ui.ask("Keep Rolling?")
+        @ui.ask("Player #{@position + 1}: Keep Rolling?")
       end
     end
   end

@@ -10,6 +10,7 @@ This game is played in the console by running bin/greed in the root of this proj
 
 ## Plans
 
+* Game should keep going if there is a tie for first
 * Make the robot smarter
 * Automatically find players in player directory to make them selectable.
 * Build a rake task to create a skeleton for a player.  Allow people to implement their own keep_rolling? algorithm and have them duke it out against each other by simulating the game.

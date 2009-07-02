@@ -12,13 +12,13 @@ class TestHuman < Test::Unit::TestCase
   end
   
   def test_keep_rolling_returns_true_if_user_says_y
-    UI.expects(:ask).with("Keep Rolling?").returns(true)
+    UI.expects(:ask).with("Player 1: Keep Rolling?").returns(true)
     
     assert @human.keep_rolling?(stats, turn_scores)
   end
   
   def test_keep_rolling_returns_false_if_user_says_n
-    UI.expects(:ask).with("Keep Rolling?").returns(false)
+    UI.expects(:ask).with("Player 1: Keep Rolling?").returns(false)
     
     assert !@human.keep_rolling?(stats, turn_scores)
   end

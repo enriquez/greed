@@ -66,10 +66,10 @@ module Greed
         @in_the_game[@current_player.position] = true
       end
       
+      @spectator.player_ends_turn(@current_player, turn_score_contribution)
+      
       @scores[@current_player.position] += turn_score_contribution
       @current_player = next_player
-      
-      @spectator.player_ends_turn(@current_player, turn_score_contribution)
       
       turn_score_contribution
     end
