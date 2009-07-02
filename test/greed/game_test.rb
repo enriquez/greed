@@ -22,12 +22,16 @@ class TestGame < Test::Unit::TestCase
   end
   
   def test_initial_stats
-    expected = { :scores => [0,0,0], :in_the_game => [false,false,false] }
+    expected = { :scores => [0,0,0], :in_the_game => [false,false,false], :players => ["Mike", "Jen", "Mr. Robo"] }
     assert_equal expected, @game.stats
   end
   
-  def test_current_player_position
+  def test_current_player
     assert_equal @player_1, @game.current_player
+  end
+  
+  def test_current_player_not_in_game
+    assert !@game.stats[:in_the_game][0]
   end
   
   def test_game_is_not_in_final_round
@@ -50,15 +54,35 @@ class TestGame < Test::Unit::TestCase
     assert_equal 1050, @game.stats[:scores][0]
   end
   
+  def test_play_turn_rolls_twice_then_runs_out_of_dice
+    player_rolls_turn_sequence @player_1, [[1,1,1,2,3],[5,5]]
+    turn_score_result = @game.play_turn
+    
+    assert_equal 1100, turn_score_result
+    assert_equal 1100, @game.stats[:scores][0]
+  end
+  
+  def test_play_turn_rolls_twice_then_scores_a_zero
+    player_rolls_turn_sequence @player_1, [[1,1,1,2,3],[2,2]]
+    turn_score_result = @game.play_turn
+    
+    assert_equal 0, turn_score_result
+    assert_equal 0, @game.stats[:scores][0]
+  end
+  
   def test_turn_score_does_not_count_if_not_in_game
     player_rolls_once(@player_1, [1,2,3,4,5])
     @game.play_turn
+    
+    assert_equal 0, @game.stats[:scores][0]
     
     player_rolls_once(@player_2, [1,1,1,2,3])
     @game.play_turn
     
     player_rolls_once(@player_3, [1,1,1,2,3])
     @game.play_turn
+    
+    assert !@game.stats[:in_the_game][0]
     
     player_rolls_once(@player_1, [1,5,4,2,3])
     @game.play_turn
@@ -70,11 +94,15 @@ class TestGame < Test::Unit::TestCase
     player_rolls_once(@player_1, [3,3,3,4,2])
     @game.play_turn
     
+    assert_equal 300, @game.stats[:scores][0]
+    
     player_rolls_once(@player_2, [1,1,1,2,3])
     @game.play_turn
     
     player_rolls_once(@player_3, [1,1,1,2,3])
     @game.play_turn
+    
+    assert @game.stats[:in_the_game][0]
     
     player_rolls_once(@player_1, [1,5,4,2,3])
     @game.play_turn
@@ -82,13 +110,107 @@ class TestGame < Test::Unit::TestCase
     assert_equal 450, @game.stats[:scores][0]
   end
   
-  def test_turn_score_does_not_count_if_player_rolls_a_zero
-    player_rolls_turn_sequence @player_1, [[1,1,1,1,2],[2]]
+  def test_should_be_in_final_round_if_a_player_reaches_3000
+    player_rolls_once(@player_1, [2,2,3,4,6])
     @game.play_turn
+    assert !@game.in_final_round?
     
-    assert_equal 0, @game.stats[:scores][0]
+    player_rolls_once(@player_2, [1,1,1,4,6])
+    @game.play_turn
+    assert !@game.in_final_round?
+    
+    player_rolls_once(@player_3, [2,2,3,4,6])
+    @game.play_turn
+    assert !@game.in_final_round?
+    
+    player_rolls_once(@player_1, [2,2,3,4,6])
+    @game.play_turn
+    assert !@game.in_final_round?
+    
+    player_rolls_once(@player_2, [1,1,1,4,6])
+    @game.play_turn
+    assert !@game.in_final_round?
+    
+    player_rolls_once(@player_3, [2,2,3,4,6])
+    @game.play_turn
+    assert !@game.in_final_round?
+    
+    player_rolls_once(@player_1, [2,2,3,4,6])
+    @game.play_turn
+    assert !@game.in_final_round?
+    
+    player_rolls_once(@player_2, [1,1,1,4,6])
+    @game.play_turn    
+    assert @game.in_final_round?
+    assert_equal 3000, @game.stats[:scores][1]
   end
   
+  def test_player_rolls_once_test_helper
+    @player = player_stub
+    player_rolls_once @player, [1,2,3,4,5]
+    
+    assert_equal [1,2,3,4,5], @player.roll
+    assert !@player.keep_rolling?
+  end
+  
+  def test_player_rolls_turn_sequence_test_helper
+    @player = player_stub
+    player_rolls_turn_sequence @player, [[1,2,3,4,5],[1,3,4],[2,5]]
+    
+    assert_equal [1,2,3,4,5], @player.roll
+    assert @player.keep_rolling?
+    assert_equal [1,3,4], @player.roll
+    assert @player.keep_rolling?
+    assert_equal [2,5], @player.roll
+    assert !@player.keep_rolling?
+  end
+  
+  def player_rolls_once player, roll_result
+    player.expects(:roll).with(any_parameters).returns(roll_result)
+    player.expects(:keep_rolling?).with(any_parameters).returns(false).at_most_once
+  end
+  
+  def player_rolls_turn_sequence player, roll_results
+    roll_sequence = sequence("roll sequence")
+    
+    # first roll
+    player.expects(:roll).
+      with(any_parameters).
+      returns(roll_results.slice!(0)).
+      in_sequence(roll_sequence)
+    player.expects(:keep_rolling?).
+      with(any_parameters).
+      returns(true).
+      in_sequence(roll_sequence)
+          
+    last_roll_result = roll_results.last
+      
+    # iterate through each subsequent roll
+    roll_results.each do |roll_result|
+      keep_rolling = last_roll_result != roll_result
+      
+      player.expects(:roll).
+        with(any_parameters).
+        returns(roll_result).
+        in_sequence(roll_sequence)
+      player.expects(:keep_rolling?).
+        with(any_parameters).
+        returns(keep_rolling).
+        at_most_once.
+        in_sequence(roll_sequence)
+    end
+  end
+  
+  def player_stub(method_results = {})
+    default_method_results = {
+      :name => "Player Name"
+    }
+    
+    stub(default_method_results.merge(method_results))
+  end
+end
+
+class TestScoring < Test::Unit::TestCase
   def test_score_of_an_empty_list_is_zero
     assert_equal 0, Game.score([])
   end
@@ -161,49 +283,5 @@ class TestGame < Test::Unit::TestCase
     assert_equal 3, Game.non_scoring_dice_count([2,3,4,5,1])
     assert_equal 3, Game.non_scoring_dice_count([1,2,1,6,6])
     assert_equal 1, Game.non_scoring_dice_count([1,2])
-  end
-  
-  def player_rolls_once player, roll_result
-    player.expects(:roll).with(any_parameters).returns(roll_result)
-    player.expects(:keep_rolling?).with(any_parameters).returns(false)
-  end
-  
-  def player_rolls_turn_sequence player, roll_results
-    roll_sequence = sequence("roll sequence")
-    
-    # first roll
-    player.expects(:roll).
-      with(any_parameters).
-      returns(roll_results.slice!(0)).
-      in_sequence(roll_sequence)
-    player.expects(:keep_rolling?).
-      with(any_parameters).
-      returns(true).
-      in_sequence(roll_sequence)
-          
-    last_roll_result = roll_results.last
-      
-    # iterate through each subsequent roll
-    roll_results.each do |roll_result|
-      keep_rolling = last_roll_result != roll_result
-      
-      player.expects(:roll).
-        with(any_parameters).
-        returns(roll_result).
-        in_sequence(roll_sequence)
-      player.expects(:keep_rolling?).
-        with(any_parameters).
-        returns(keep_rolling).
-        at_most_once.
-        in_sequence(roll_sequence)
-    end
-  end
-  
-  def player_stub(method_results = {})
-    default_method_results = {
-      :name => "Player Name"
-    }
-    
-    stub(default_method_results.merge(method_results))
   end
 end

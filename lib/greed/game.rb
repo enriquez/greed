@@ -8,14 +8,15 @@ module Greed
     def initialize players
       @players = players
       @dice_set = DiceSet.new
-      @turns = 0
       @scores = Array.new
       @in_the_game = Array.new
+      @player_names = Array.new
       @current_player = @players.first
       
       @players.each_with_index do |player, i|
         @scores << 0
         @in_the_game << false
+        @player_names << player.name
         player.position = i
       end
     end
@@ -34,11 +35,12 @@ module Greed
         result = current_player_roll(dice_count)
         
         turn_scores << result[:score]
-        dice_count = result[:dice_count]
+        dice_count = result[:dice_remaining]
         
         if turn_scores.include?(0)
           turn_continues = false
-        elsif dice_count <= 0
+        end
+        if dice_count <= 0
           turn_continues = false
         end
         
@@ -58,7 +60,6 @@ module Greed
       
       @scores[@current_player.position] += turn_score_contribution
       @current_player = next_player
-      @turns += 1
       
       turn_score_contribution
     end
@@ -66,7 +67,8 @@ module Greed
     def stats
       {
         :scores => @scores,
-        :in_the_game => @in_the_game
+        :in_the_game => @in_the_game,
+        :players => @player_names
       }
     end
     
@@ -145,10 +147,9 @@ module Greed
       roll_result = @current_player.roll(@dice_set, dice_count)
       
       score = Game.score(roll_result)
-      dice_count = Game.non_scoring_dice_count(roll_result)
+      dice_remaining = Game.non_scoring_dice_count(roll_result)
       
-      UI.puts "Rolled a #{roll_result.join(",")} for a score of #{score}. #{dice_count} die left."
-      { :score => score, :dice_count => dice_count, :result => roll_result }
+      { :score => score, :dice_remaining => dice_remaining, :dice_result => roll_result }
     end
     
     def next_player
