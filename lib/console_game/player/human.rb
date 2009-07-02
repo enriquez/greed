@@ -7,7 +7,7 @@ module Greed
       end
       
       def name
-        "Player #{@position + 1}"
+        "Human"
       end
       
       def keep_rolling?(stats, turn_scores)

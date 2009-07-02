@@ -11,7 +11,9 @@ class TestGame < Test::Unit::TestCase
     @player_2.expects(:position=).with(1)
     @player_3.expects(:position=).with(2)
     
-    @game = Game.new([@player_1, @player_2, @player_3])
+    @spectator = stub_everything
+    
+    @game = Game.new([@player_1, @player_2, @player_3], @spectator)
   end
   
   def test_sanity_check_for_player_stub
@@ -40,6 +42,7 @@ class TestGame < Test::Unit::TestCase
   
   def test_play_turn_rolls_once_then_stops
     player_rolls_once(@player_1, [1,1,1,2,3])
+    
     turn_score_result = @game.play_turn
     
     assert_equal 1000, turn_score_result

@@ -1,20 +1,43 @@
 module ConsoleGame
   class Console
+    include Greed
     
-    def initialize
+    def initialize(out_stream, in_stream)
       @ui = UI
+      @ui.out_stream = out_stream
+      @ui.in_stream = in_stream
     end
     
-    def out_stream=(stream)
-      @ui.out_stream = stream
-    end
-    
-    def in_stream=(stream)
-      @ui.in_stream = stream
-    end
-    
-    def welcome
-      @ui.puts "Welcome to Greed!"
+    def start
+      players = Array.new
+      
+      @ui.puts "Welcome to Greed"
+      
+      selected_players = ask_for_players
+      selected_players.each do |selected_player|
+        case selected_player
+        when :human
+          players << Player::Human.new
+        when :robot
+          players << Player::Robot.new
+        end
+      end
+      
+      game = Game.new(players, self)
+      
+      while !game.in_final_round?
+        game.play_turn
+        display_stats game.stats
+      end
+      
+      @ui.puts ""
+      @ui.puts "================== FINAL ROUND =================="
+      
+      (players.length - 1).times { game.play_turn }
+      
+      @ui.puts ""
+      @ui.puts "FINAL STATS"
+      display_stats game.stats
     end
     
     def ask_for_players
@@ -51,6 +74,7 @@ module ConsoleGame
     def player_starts_turn(player)
       player_position = player.position + 1
       
+      @ui.puts ""
       @ui.puts "=== Player #{player_position}'s turn ==="
     end
     
@@ -95,11 +119,9 @@ module ConsoleGame
         in_game_row << " #{in_the_game}".ljust(10) << "|"
       end
       
-      @ui.puts "=================== STATS =================="
       @ui.puts players_row
       @ui.puts scores_row
       @ui.puts in_game_row
-      @ui.puts "============================================"
     end
   end
 end

@@ -3,17 +3,9 @@ require File.dirname(__FILE__) + '/../test_helper'
 class TestConsole < Test::Unit::TestCase
   
   def setup
-    @console = Console.new
     @out = StringIO.new
     @in = StringIO.new
-    
-    @console.out_stream = @out
-    @console.in_stream = @in
-  end
-  
-  def test_welcome_message
-    @console.welcome
-    assert_equal "Welcome to Greed!\n", @out.string
+    @console = Console.new(@out, @in)
   end
   
   def test_ask_for_players_selects_two_players
@@ -67,7 +59,7 @@ Select Player 3
   def test_player_starts_turn
     @console.player_starts_turn(player)
     
-    assert_equal "=== Player 1's turn ===\n", @out.string
+    assert_equal "\n=== Player 1's turn ===\n", @out.string
   end
   
   def test_player_ends_turn
@@ -84,11 +76,9 @@ Select Player 3
     @console.display_stats(stats)
     
     expected_output = <<-OUTPUT
-=================== STATS ==================
 |         | Player 1 | Player 2 | Player 3 |
 |   Score | 100      | 0        | 2500     |
 |In Game? | true     | false    | true     |
-============================================
     OUTPUT
     assert_equal expected_output, @out.string
   end

@@ -8,7 +8,7 @@ class TestHuman < Test::Unit::TestCase
   end
   
   def test_name_is_player_position
-    assert_equal "Player 1", @human.name
+    assert_equal "Human", @human.name
   end
   
   def test_keep_rolling_returns_true_if_user_says_y

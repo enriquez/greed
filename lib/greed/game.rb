@@ -5,8 +5,9 @@ module Greed
     FINAL_ROUND_SCORE = 3000
     IN_THE_GAME_SCORE = 300
     
-    def initialize players
+    def initialize players, spectator
       @players = players
+      @spectator = spectator
       @dice_set = DiceSet.new
       @scores = Array.new
       @in_the_game = Array.new
@@ -26,6 +27,8 @@ module Greed
     end
     
     def play_turn
+      @spectator.player_starts_turn(@current_player)
+      
       turn_score_contribution = 0
       turn_scores = Array.new
       dice_count = 5
@@ -39,13 +42,18 @@ module Greed
         
         if turn_scores.include?(0)
           turn_continues = false
+          @spectator.player_rolls_a_zero(@current_player)
         end
         if dice_count <= 0
           turn_continues = false
+          @spectator.player_used_all_the_dice(@current_player)
         end
         
         if turn_continues
           turn_continues = @current_player.keep_rolling?(stats, turn_scores)
+          unless turn_continues
+            @spectator.player_stops_rolling(@current_player)
+          end
         end
           
       end
@@ -60,6 +68,8 @@ module Greed
       
       @scores[@current_player.position] += turn_score_contribution
       @current_player = next_player
+      
+      @spectator.player_ends_turn(@current_player, turn_score_contribution)
       
       turn_score_contribution
     end
@@ -149,7 +159,11 @@ module Greed
       score = Game.score(roll_result)
       dice_remaining = Game.non_scoring_dice_count(roll_result)
       
-      { :score => score, :dice_remaining => dice_remaining, :dice_result => roll_result }
+      output = { :score => score, :dice_remaining => dice_remaining, :dice_result => roll_result }
+      
+      @spectator.player_rolls(@current_player, output)
+      
+      output
     end
     
     def next_player
