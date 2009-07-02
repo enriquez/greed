@@ -17,9 +17,9 @@ module ConsoleGame
       selected_players.each do |selected_player|
         case selected_player
         when :human
-          players << Player::Human.new
+          players << ConsoleGame::Player::Human.new
         when :robot
-          players << Player::Robot.new
+          players << Greed::Player::Robot.new
         end
       end
       

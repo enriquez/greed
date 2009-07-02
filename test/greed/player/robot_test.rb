@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../../test_helper'
 
 class TestRobot < Test::Unit::TestCase
   def setup
-    @robot = Player::Robot.new
+    @robot = Greed::Player::Robot.new
   end
   
   def test_name_is_robot

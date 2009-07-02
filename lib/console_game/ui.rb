@@ -1,4 +1,4 @@
-module Greed
+module ConsoleGame
   class UI
     class << self
       def in_stream=(in_stream)

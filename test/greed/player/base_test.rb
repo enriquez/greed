@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class TestBase < Test::Unit::TestCase
   
   def setup
-    @player = Player::Base.new
+    @player = Greed::Player::Base.new
   end
   
   def test_should_have_a_default_name

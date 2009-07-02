@@ -1,6 +1,6 @@
-module Greed
+module ConsoleGame
   module Player
-    class Human < Base
+    class Human < Greed::Player::Base
       
       def initialize
         @ui = UI
